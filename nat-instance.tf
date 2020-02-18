@@ -61,7 +61,7 @@ data "aws_ami" "nat_instance" {
 // https://docs.aws.amazon.com/vpc/latest/userguide/VPC_NAT_Instance.html
 // https://dzone.com/articles/nat-instance-vs-nat-gateway
 resource "aws_instance" "nat_instance" {
-  count                  = local.nat_instance_count
+  count                  = 1
   ami                    = join("", data.aws_ami.nat_instance.*.id)
   instance_type          = var.nat_instance_type
   subnet_id              = element(aws_subnet.public.*.id, count.index)
@@ -95,7 +95,7 @@ resource "aws_instance" "nat_instance" {
 }
 
 resource "aws_eip" "nat_instance" {
-  count = local.nat_instance_count
+  count = 1
   vpc   = true
   tags = merge(
     module.nat_instance_label.tags,
@@ -119,7 +119,7 @@ resource "aws_eip" "nat_instance" {
 }
 
 resource "aws_eip_association" "nat_instance" {
-  count         = local.nat_instance_count
+  count         = 1
   instance_id   = element(aws_instance.nat_instance.*.id, count.index)
   allocation_id = element(aws_eip.nat_instance.*.id, count.index)
 }
@@ -127,7 +127,7 @@ resource "aws_eip_association" "nat_instance" {
 resource "aws_route" "nat_instance" {
   count                  = local.nat_instance_count
   route_table_id         = element(aws_route_table.private.*.id, count.index)
-  instance_id            = element(aws_instance.nat_instance.*.id, count.index)
+  instance_id            = element(aws_instance.nat_instance.*.id, 0)
   destination_cidr_block = "0.0.0.0/0"
   depends_on             = [aws_route_table.private]
 }
